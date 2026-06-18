@@ -1,0 +1,216 @@
+- NestJS là một framework backend Node.js dùng để xây dựng server theo kiến trúc mô-đun (modular), lấy cảm hứng mạnh từ Angular (DI, decorators, module rõ ràng).
+1. Module (tách hệ thống)
+2. Controller (xử lý request, nhận request từ HTTP)
+3. Service (logic nghiệp vụ)
+4. Dependency Injection (DI)
+5. Providers (Service nâng cao)
+6. Modules nâng cao
+7. Middleware: chạy trước khi vào controller
+8. Guards: bảo vệ router
+9. Interceptors: dùng để transform response, log request, wrap data
+10. Pipes: dùng để validate + transform input
+11. Exception Filters: xử lý lỗi tập trung
+12. Validation (DTO)
+13. Async + RxJS: 
+	- NestJS support Observable:
+		+ dùng cho microservice
+		+ websocket
+14. Database integration:
+	- NestJS không ép DB nào:
+		+ MongoDB(Mongoose)
+		+ PostgreSQL(TypeORM / Prisma)
+15. Microservices: nestjs hỗ trợ gồm TCP, Redis, Kafka, RabbitMQ
+16. WebSocket
+17. Testing: gồm unit test, e2e test, Jest mặc định
+18. Deployment: Docker, PM2, vercel(ít dùng cho Backend lớn), AWS/VPS
+
+
+- Khi nào nên dùng NestJS?
+	+ Nên dùng khi:
+		+ Backend lớn (e-commerce, SaaS)
+		+ Có nhiều module (auth, order, payment…)
+		+ Team nhiều người
+		+ Cần maintain lâu dài
+	+ Không cần dùng nếu:
+		+ API nhỏ, vài route đơn giản
+		+ Project prototype nhanh
+
+
+
+
+
+
+
+coffee-backend/
+
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+│   ├── seed.ts
+├── src/
+│   ├── main.ts
+│   ├── app.module.ts
+│   ├── config/
+│   │   ├── app.config.ts
+│   │   ├── jwt.config.ts
+│   │   ├── database.config.ts
+│   │   ├── redis.config.ts
+│   │   ├── cloudinary.config.ts
+│   │   └── momo.config.ts
+│   ├── core/
+│   │   ├── guards/
+│   │   │   ├── jwt-auth.guard.ts
+│   │   │   └── roles.guard.ts
+│   │   ├── decorators/
+│   │   │   ├── roles.decorator.ts
+│   │   │   └── current-user.decorator.ts
+│   │   ├── filters/
+│   │   │   └── all-exception.filter.ts
+│   │   ├── interceptors/
+│   │   │   └── response.interceptor.ts
+│   │   ├── strategies/
+│   │   │   └── jwt.strategy.ts
+│   │   └── pipes/
+│   ├── common/
+│   │   ├── constants/
+│   │   │   ├── jwt.constant.ts
+│   │   ├── enums/
+│   │   │   ├── order-status.enum.ts
+│   │   │   ├── payment-method.enum.ts
+│   │   │   ├── payment-status.enum.ts
+│   │   │   ├── role.enum.ts
+│   │   ├── interfaces/
+│   │   │   ├── jwt-payload.interface.ts
+│   │   ├── dto/
+│   │   └── helpers/
+│   ├── prisma/
+│   │   ├── prisma.module.ts
+│   │   └── prisma.service.ts
+│   ├── integrations/
+│   │   ├── cloudinary/
+│   │   │   ├── cloudinary.module.ts
+│   │   │   └── cloudinary.service.ts
+│   │   ├── redis/
+│   │   │   ├── redis.module.ts
+│   │   │   └── redis.service.ts
+│   │   ├── momo/
+│   │   │   ├── momo.module.ts
+│   │   │   └── momo.service.ts
+│   │   └── socket/
+│   ├── shared/
+│   │   ├── upload/
+│   │   ├── cache/
+│   │   └── logger/
+│   └── modules/
+│       ├── auth/
+│       │   ├── auth.module.ts
+│       │   ├── controllers/
+│       │   │   └── auth.controller.ts
+│       │   ├── services/
+│       │   │   └── auth.service.ts
+│       │   └── dto/
+│       │   │   └── login.dto.ts
+│       │   │   └── register.dto.ts
+│       │   │   └── refresh-token.dto.ts
+│       ├── users/
+│       │   ├── users.module.ts
+│       │   ├── controllers/
+│       │   │   └── users.controller.ts
+│       │   ├── services/
+│       │   │   └── users.service.ts
+│       │   ├── repositories/
+│       │   │   └── users.repository.ts
+│       │   └── dto/
+│       ├── categories/
+│       │   ├── categories.module.ts
+│       │   ├── controllers/
+│       │   │   └── categories.controller.ts
+│       │   ├── services/
+│       │   │   └── categories.service.ts
+│       │   ├── repositories/
+│       │   │   └── categories.repository.ts
+│       │   └── dto/
+│       │   │   └── create-category.dto.ts
+│       │   │   └── update-category.dto.ts
+│       ├── products/
+│       │   ├── products.module.ts
+│       │   ├── controllers/
+│       │   │   └── products.controller.ts
+│       │   ├── services/
+│       │   │   └── products.service.ts
+│       │   ├── repositories/
+│       │   │   └── products.repository.ts
+│       │   └── dto/
+│       │   │   └── create-product.dto.ts
+│       │   │   └── update-product.dto.ts
+│       │   │   └── query-product.dto.ts
+│       ├── ingredients/
+│       │   ├── ingredients.module.ts
+│       │   ├── controllers/
+│       │   │   └── ingredients.controller.ts
+│       │   ├── services/
+│       │   │   └── ingredients.service.ts
+│       │   ├── repositories/
+│       │   │   └── ingredients.repository.ts
+│       │   └── dto/
+│       │   │   └── create-ingredient.dto.ts
+│       │   │   └── update-ingredient.dto.ts
+│       ├── inventory/
+│       │   ├── inventory.module.ts
+│       │   ├── controllers/
+│       │   │   └── inventory.controller.ts
+│       │   ├── services/
+│       │   │   └── inventory.service.ts
+│       │   ├── repositories/
+│       │   │   └── inventory.repository.ts
+│       │   └── dto/
+│       │   │   └── create-inventory.dto.ts
+│       │   │   └── update-inventory.dto.ts
+│       ├── recipes/
+│       │   ├── recipes.module.ts
+│       │   ├── controllers/
+│       │   │   └── recipes.controller.ts
+│       │   ├── services/
+│       │   │   └── recipes.service.ts
+│       │   ├── repositories/
+│       │   │   └── recipes.repository.ts
+│       │   └── dto/
+│       │   │   └── create-recipe.dto.ts
+│       │   │   └── recipe-item.dto.ts
+│       ├── carts/
+│       │   ├── carts.module.ts
+│       │   ├── controllers/
+│       │   │   └── carts.controller.ts
+│       │   ├── services/
+│       │   │   └── carts.service.ts
+│       │   ├── repositories/
+│       │   │   └── carts.repository.ts
+│       │   │   └── cart-item.repository.ts
+│       │   └── dto/
+│       │   │   └── add-cart-item.dto.ts
+│       │   │   └── update-cart-item.dto.ts
+│       ├── orders/
+│       │   ├── orders.module.ts
+│       │   ├── controllers/
+│       │   │   └── orders.controller.ts
+│       │   ├── services/
+│       │   │   └── orders.service.ts
+│       │   ├── repositories/
+│       │   │   └── orders.repository.ts
+│       │   └── dto/
+│       │   │   └── create-order-item.dto.ts
+│       ├── payments/
+│       └── notifications/
+│
+├── test/
+│
+├── .env
+├── .env.example
+│
+├── Dockerfile
+├── docker-compose.yml
+│
+├── nest-cli.json
+├── tsconfig.json
+│
+└── package.json
