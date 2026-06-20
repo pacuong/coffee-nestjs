@@ -35,9 +35,10 @@
 		+ API nhỏ, vài route đơn giản
 		+ Project prototype nhanh
 
+- @ApiTags() là decorator của @nestjs/swagger, 
+dùng để nhóm các API theo từng module trong Swagger UI.
 
-
-
+- Swagger để tự động sinh tài liệu API.
 
 
 

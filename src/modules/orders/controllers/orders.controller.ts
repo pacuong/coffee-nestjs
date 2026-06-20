@@ -5,7 +5,9 @@ import { OrdersService } from '../services/orders.service';
 import { CurrentUser } from 'src/core/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Orders')
 @UseGuards(JwtAuthGuard)
 @Controller('orders')
 export class OrdersController {
