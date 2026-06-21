@@ -13,6 +13,12 @@ export class IngredientsRepository {
     });
   }
 
+  findByName(name: string) {
+    return this.prisma.ingredient.findFirst({
+      where: { name },
+    });
+  }
+
   findMany() {
     return this.prisma.ingredient.findMany({
       orderBy: {

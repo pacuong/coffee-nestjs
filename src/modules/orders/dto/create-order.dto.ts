@@ -1,11 +1,12 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum } from 'class-validator';
+import { PaymentMethod } from '@prisma/client';
 
-export class CreateOrderItemDto {
-  @ApiPropertyOptional({
-    example: 'Ít đá, ít đường',
+export class CreateOrderDto {
+  @ApiProperty({
+    enum: PaymentMethod,
+    example: PaymentMethod.COD,
   })
-  @IsOptional()
-  @IsString()
-  note?: string;
+  @IsEnum(PaymentMethod)
+  paymentMethod: PaymentMethod;
 }

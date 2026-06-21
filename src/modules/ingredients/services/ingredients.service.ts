@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { IngredientsRepository } from '../repositories/ingredients.repository';
 
@@ -9,7 +13,13 @@ import { UpdateIngredientDto } from '../dto/update-ingredient.dto';
 export class IngredientsService {
   constructor(private readonly ingredientRepo: IngredientsRepository) {}
 
-  create(dto: CreateIngredientDto) {
+  async create(dto: CreateIngredientDto) {
+    const existing = await this.ingredientRepo.findByName(dto.name);
+
+    if (existing) {
+      throw new BadRequestException('Ingredient already exists');
+    }
+
     return this.ingredientRepo.create(dto);
   }
 
@@ -29,6 +39,14 @@ export class IngredientsService {
 
   async update(id: string, dto: UpdateIngredientDto) {
     await this.findOne(id);
+
+    if (dto.name) {
+      const existing = await this.ingredientRepo.findByName(dto.name);
+
+      if (existing && existing.id !== id) {
+        throw new BadRequestException('Ingredient already exists');
+      }
+    }
 
     return this.ingredientRepo.update(id, dto);
   }

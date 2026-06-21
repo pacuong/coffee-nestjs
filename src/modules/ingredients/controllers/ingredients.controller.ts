@@ -17,7 +17,7 @@ import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/core/guards/roles.guard';
 import { Roles } from 'src/core/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Ingredients')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -26,30 +26,50 @@ export class IngredientsController {
   constructor(private readonly ingredientsService: IngredientsService) {}
 
   @Post()
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create ingredient',
+  })
   @Roles(Role.ADMIN)
   create(@Body() dto: CreateIngredientDto) {
     return this.ingredientsService.create(dto);
   }
 
   @Get()
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get all ingredients',
+  })
   @Roles(Role.ADMIN)
   findAll() {
     return this.ingredientsService.findAll();
   }
 
   @Get(':id')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get ingredient by id',
+  })
   @Roles(Role.ADMIN)
   findOne(@Param('id') id: string) {
     return this.ingredientsService.findOne(id);
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update ingredient',
+  })
   @Roles(Role.ADMIN)
   update(@Param('id') id: string, @Body() dto: UpdateIngredientDto) {
     return this.ingredientsService.update(id, dto);
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete ingredient',
+  })
   @Roles(Role.ADMIN)
   remove(@Param('id') id: string) {
     return this.ingredientsService.remove(id);

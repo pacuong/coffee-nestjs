@@ -1,9 +1,15 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Prisma, OrderStatus, PaymentStatus } from '@prisma/client';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CartRepository } from '../../carts/repositories/cart.repository';
 import { OrdersRepository } from '../repositories/orders.repository';
+import { CreateOrderDto } from 'src/modules/orders/dto/create-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -13,7 +19,7 @@ export class OrdersService {
     private readonly orderRepo: OrdersRepository,
   ) {}
 
-  async createOrder(userId: string) {
+  async createOrder(userId: string, dto: CreateOrderDto) {
     const cart = await this.cartRepo.findByUserId(userId);
 
     console.dir(cart, {
@@ -100,7 +106,7 @@ export class OrdersService {
           },
           totalAmount: total,
           status: OrderStatus.PENDING,
-          paymentMethod: 'COD',
+          paymentMethod: dto.paymentMethod,
           paymentStatus: PaymentStatus.PENDING,
 
           items: {
@@ -116,9 +122,11 @@ export class OrdersService {
         },
       });
 
-      await tx.cartItem.deleteMany({
-        where: {
-          cartId: cart.id,
+      await tx.payment.create({
+        data: {
+          orderId: order.id,
+          amount: total,
+          status: PaymentStatus.PENDING,
         },
       });
 
@@ -128,7 +136,25 @@ export class OrdersService {
     return result;
   }
 
-  findOrder(id: string) {
-    return this.orderRepo.findById(id);
+  async findOrder(userId: string, id: string) {
+    const order = await this.orderRepo.findById(id);
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.userId !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    return order;
+  }
+
+  findMyOrders(userId: string) {
+    return this.orderRepo.findByUserId(userId);
+  }
+
+  findAll() {
+    return this.orderRepo.findAll();
   }
 }

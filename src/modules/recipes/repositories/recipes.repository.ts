@@ -75,4 +75,12 @@ export class RecipesRepository {
       },
     });
   }
+
+  delete(variantId: string) {
+    return this.prisma.recipe.delete({
+      where: {
+        variantId,
+      },
+    });
+  }
 }

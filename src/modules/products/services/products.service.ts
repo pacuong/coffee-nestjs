@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import slugify from 'slugify';
 
@@ -8,6 +12,7 @@ import { CategoriesRepository } from '../../categories/repositories/categories.r
 import { CreateProductDto } from '../dto/create-product.dto';
 import { QueryProductDto } from '../dto/query-product.dto';
 import { Prisma } from '@prisma/client';
+import { UpdateProductDto } from 'src/modules/products/dto/update-product.dto';
 
 @Injectable()
 export class ProductsService {
@@ -77,5 +82,40 @@ export class ProductsService {
         lastPage: Math.ceil(total / limit),
       },
     };
+  }
+
+  async findOne(id: string) {
+    const product = await this.productsRepository.findById(id);
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return product;
+  }
+
+  async update(id: string, dto: UpdateProductDto) {
+    const product = await this.productsRepository.findById(id);
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return this.productsRepository.update(id, {
+      name: dto.name,
+      description: dto.description,
+    });
+  }
+
+  async remove(id: string) {
+    const product = await this.productsRepository.findById(id);
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return this.productsRepository.update(id, {
+      isActive: false,
+    });
   }
 }

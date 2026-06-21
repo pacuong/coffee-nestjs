@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 
 import * as bcrypt from 'bcrypt';
-
 import { JwtService } from '@nestjs/jwt';
 
 import { UsersRepository } from '../../users/repositories/users.repository';
@@ -35,9 +34,18 @@ export class AuthService {
       password: hashedPassword,
     });
 
+    const safeUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+
     return {
       message: 'Register success',
-      user,
+      user: safeUser,
     };
   }
 
@@ -59,8 +67,18 @@ export class AuthService {
       role: user.role,
     });
 
+    const safeUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+
     return {
       accessToken,
+      user: safeUser,
     };
   }
 }

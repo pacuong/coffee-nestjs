@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma, ProductVariant } from '@prisma/client';
 
 import { ProductVariantsRepository } from '../repositories/product-variants.repository';
@@ -30,7 +34,13 @@ export class ProductVariantsService {
     });
   }
 
-  update(id: string, dto: UpdateProductVariantDto) {
+  async update(id: string, dto: UpdateProductVariantDto) {
+    const variant = await this.variantRepo.findById(id);
+
+    if (!variant) {
+      throw new NotFoundException('Variant not found');
+    }
+
     return this.variantRepo.update(id, {
       ...(dto.name && { name: dto.name }),
       ...(dto.price !== undefined && {
@@ -43,7 +53,23 @@ export class ProductVariantsService {
     return this.variantRepo.findByProductId(productId);
   }
 
-  delete(id: string) {
+  async findOne(id: string) {
+    const variant = await this.variantRepo.findById(id);
+
+    if (!variant) {
+      throw new NotFoundException('Variant not found');
+    }
+
+    return variant;
+  }
+
+  async delete(id: string) {
+    const variant = await this.variantRepo.findById(id);
+
+    if (!variant) {
+      throw new NotFoundException('Variant not found');
+    }
+
     return this.variantRepo.delete(id);
   }
 }
