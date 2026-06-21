@@ -7,7 +7,7 @@ import { LoginDto } from '../dto/login.dto';
 import { CurrentUser } from 'src/core/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
 import type { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -15,17 +15,27 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @ApiOperation({
+    summary: 'Register account',
+  })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('login')
+  @ApiOperation({
+    summary: 'Login account',
+  })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get current user profile',
+  })
   profile(@CurrentUser() user: JwtPayload) {
     return user;
   }

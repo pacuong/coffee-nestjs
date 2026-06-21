@@ -35,7 +35,9 @@
 		+ API nhỏ, vài route đơn giản
 		+ Project prototype nhanh
 
-- @ApiTags() là decorator của @nestjs/swagger, 
+- @ApiTags() là decorator của @nestjs/swagger,
+- @ApiBearerAuth: dùng để báo cho Swagger biết rằng endpoint này cần Bearer Token (JWT) để gọi
+- @ApiOperation: dùng để mô tả endpoint đang làm gì trong Swagger UI.
 dùng để nhóm các API theo từng module trong Swagger UI.
 
 - Swagger để tự động sinh tài liệu API.

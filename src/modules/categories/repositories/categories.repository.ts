@@ -33,4 +33,17 @@ export class CategoriesRepository {
       },
     });
   }
+
+  update(id: string, data: { name?: string; slug?: string }) {
+    return this.prisma.category.update({
+      where: { id },
+      data,
+    });
+  }
+
+  delete(id: string) {
+    return this.prisma.category.delete({
+      where: { id },
+    });
+  }
 }

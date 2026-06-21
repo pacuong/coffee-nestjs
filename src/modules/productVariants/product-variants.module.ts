@@ -11,5 +11,6 @@ import { ProductVariantsRepository } from './repositories/product-variants.repos
   imports: [PrismaModule, ProductsModule],
   controllers: [ProductVariantsController],
   providers: [ProductVariantsService, ProductVariantsRepository],
+  exports: [ProductVariantsRepository],
 })
 export class ProductVariantsModule {}

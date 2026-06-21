@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 
 import { ProductsService } from '../services/products.service';
 
@@ -9,6 +19,7 @@ import { RolesGuard } from 'src/core/guards/roles.guard';
 import { Role } from '@prisma/client';
 import { Roles } from 'src/core/decorators/roles.decorator';
 import { ApiTags } from '@nestjs/swagger';
+import { UpdateProductDto } from 'src/modules/products/dto/update-product.dto';
 
 @ApiTags('Products')
 @Controller('products')
@@ -22,8 +33,27 @@ export class ProductsController {
     return this.productsService.create(dto);
   }
 
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.productsService.findOne(id);
+  }
+
   @Get()
   findAll(@Query() query: QueryProductDto) {
     return this.productsService.findAll(query);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
+    return this.productsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  remove(@Param('id') id: string) {
+    return this.productsService.remove(id);
   }
 }

@@ -49,4 +49,10 @@ export class RecipesService {
 
     return recipe;
   }
+
+  async remove(variantId: string) {
+    await this.findOneByVariant(variantId);
+
+    return this.recipeRepo.delete(variantId);
+  }
 }

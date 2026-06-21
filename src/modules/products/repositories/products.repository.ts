@@ -54,4 +54,17 @@ export class ProductsRepository {
       },
     });
   }
+
+  update(id: string, data: Prisma.ProductUpdateInput) {
+    return this.prisma.product.update({
+      where: { id },
+      data,
+    });
+  }
+
+  delete(id: string) {
+    return this.prisma.product.delete({
+      where: { id },
+    });
+  }
 }

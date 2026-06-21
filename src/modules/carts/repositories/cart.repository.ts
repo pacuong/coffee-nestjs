@@ -40,6 +40,7 @@ export class CartRepository {
       data: { userId },
     });
   }
+
   clearCartItems(cartId: string) {
     return this.prisma.cartItem.deleteMany({
       where: { cartId },
