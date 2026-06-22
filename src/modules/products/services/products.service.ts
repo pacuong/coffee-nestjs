@@ -14,6 +14,8 @@ import { QueryProductDto } from '../dto/query-product.dto';
 import { Prisma } from '@prisma/client';
 import { UpdateProductDto } from 'src/modules/products/dto/update-product.dto';
 import { CloudinaryService } from 'src/integrations/cloudinary/cloudinary.service';
+import { RedisService } from 'src/integrations/redis/redis.service';
+import { getProductCacheKey } from 'src/common/helpers/product-cache.helper';
 
 @Injectable()
 export class ProductsService {
@@ -21,6 +23,7 @@ export class ProductsService {
     private readonly productsRepository: ProductsRepository,
     private readonly categoriesRepository: CategoriesRepository,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly redis: RedisService,
   ) {}
 
   async create(dto: CreateProductDto, file?: Express.Multer.File) {
@@ -96,11 +99,21 @@ export class ProductsService {
   }
 
   async findOne(id: string) {
+    const cacheKey = getProductCacheKey(id);
+
+    const cached = await this.redis.get(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
     const product = await this.productsRepository.findById(id);
 
     if (!product) {
       throw new NotFoundException('Product not found');
     }
+
+    await this.redis.set(cacheKey, product, 300);
 
     return product;
   }
@@ -126,12 +139,16 @@ export class ProductsService {
       imagePublicId = upload.publicId;
     }
 
-    return this.productsRepository.update(id, {
+    const updated = await this.productsRepository.update(id, {
       name: dto.name,
       description: dto.description,
       image,
       imagePublicId,
     });
+
+    await this.redis.del(getProductCacheKey(id));
+
+    return updated;
   }
 
   async remove(id: string) {
@@ -147,8 +164,12 @@ export class ProductsService {
       await this.cloudinaryService.deleteImage(imagePublicId);
     }
 
-    return this.productsRepository.update(id, {
+    const deleted = await this.productsRepository.update(id, {
       isActive: false,
     });
+
+    await this.redis.del(getProductCacheKey(id));
+
+    return deleted;
   }
 }

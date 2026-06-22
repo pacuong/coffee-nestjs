@@ -12,6 +12,8 @@ import { Cart, CartItem, ProductVariant } from '@prisma/client';
 import { UpdateCartItemDto } from 'src/modules/carts/dto/update-cart-item.dto';
 import { ProductVariantsService } from 'src/modules/productVariants/services/product-variants.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { RedisService } from 'src/integrations/redis/redis.service';
+import { getCartCacheKey } from 'src/common/helpers/cart-cache.helper';
 
 type CartFull = Cart & {
   items: (CartItem & {
@@ -22,6 +24,7 @@ type CartFull = Cart & {
 @Injectable()
 export class CartService {
   constructor(
+    private readonly redis: RedisService,
     private readonly prisma: PrismaService,
     private readonly cartRepo: CartRepository,
     private readonly cartItemRepo: CartItemRepository,
@@ -29,15 +32,15 @@ export class CartService {
   ) {}
 
   async getOrCreateCart(userId: string): Promise<CartFull> {
+    const cacheKey = getCartCacheKey(userId);
+
+    const cached = await this.redis.get<CartFull>(cacheKey);
+    if (cached) return cached;
+
     let cart = await this.cartRepo.findByUserId(userId);
 
     if (!cart) {
-      try {
-        await this.cartRepo.create(userId);
-      } catch (e) {
-        console.log('Create cart error:', e);
-      }
-
+      await this.cartRepo.create(userId);
       cart = await this.cartRepo.findByUserId(userId);
     }
 
@@ -45,7 +48,17 @@ export class CartService {
       throw new Error('Failed to create or retrieve cart');
     }
 
-    return cart;
+    await this.invalidateCart(userId);
+
+    const freshCart = await this.cartRepo.findByUserId(userId);
+
+    if (!freshCart) {
+      throw new Error('Cart not found');
+    }
+
+    await this.redis.set(getCartCacheKey(userId), freshCart, 300);
+
+    return freshCart;
   }
 
   async addItem(userId: string, dto: AddCartItemDto) {
@@ -80,7 +93,11 @@ export class CartService {
         });
       }
 
-      return this.cartItemRepo.findById(existingItem.id);
+      const result = await this.cartItemRepo.findById(existingItem.id);
+
+      await this.invalidateCart(userId);
+
+      return result;
     }
 
     const cartItem = await this.cartItemRepo.create(
@@ -98,6 +115,8 @@ export class CartService {
         })),
       });
     }
+
+    await this.invalidateCart(userId);
 
     return cartItem;
   }
@@ -118,7 +137,11 @@ export class CartService {
 
     // optional: giữ nguyên toppings (KHÔNG xóa)
 
-    return this.cartItemRepo.findById(itemId);
+    const result = await this.cartItemRepo.findById(itemId);
+
+    await this.invalidateCart(userId);
+
+    return result;
   }
 
   async removeItem(userId: string, itemId: string) {
@@ -137,12 +160,24 @@ export class CartService {
       where: { cartItemId: itemId },
     });
 
-    return this.cartItemRepo.delete(itemId);
+    const result = await this.cartItemRepo.delete(itemId);
+
+    await this.invalidateCart(userId);
+
+    return result;
   }
 
   async clearCart(userId: string) {
     const cart = await this.getOrCreateCart(userId);
 
-    return this.cartRepo.clearCartItems(cart.id);
+    const result = await this.cartRepo.clearCartItems(cart.id);
+
+    await this.invalidateCart(userId);
+
+    return result;
+  }
+
+  private async invalidateCart(userId: string) {
+    await this.redis.del(getCartCacheKey(userId));
   }
 }

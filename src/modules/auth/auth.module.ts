@@ -8,11 +8,12 @@ import { UsersModule } from '../users/users.module';
 
 import { JwtStrategy } from '../../core/strategies/jwt.strategy';
 import { jwtConfig } from 'src/config/jwt.config';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     UsersModule,
-
+    ConfigModule,
     JwtModule.register({
       secret: jwtConfig.secret,
       signOptions: {
