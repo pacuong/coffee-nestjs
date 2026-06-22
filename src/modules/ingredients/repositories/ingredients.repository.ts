@@ -30,6 +30,13 @@ export class IngredientsRepository {
   findById(id: string) {
     return this.prisma.ingredient.findUnique({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        unit: true,
+        image: true,
+        imagePublicId: true,
+      },
     });
   }
 

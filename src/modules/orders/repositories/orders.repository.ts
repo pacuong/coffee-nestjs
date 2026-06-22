@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { OrderStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -8,13 +9,16 @@ export class OrdersRepository {
   findById(id: string) {
     return this.prisma.order.findUnique({
       where: { id },
-
       include: {
         user: true,
-
         items: {
           include: {
             variant: true,
+            toppings: {
+              include: {
+                topping: true,
+              },
+            },
           },
         },
       },
@@ -52,6 +56,13 @@ export class OrdersRepository {
       orderBy: {
         createdAt: 'desc',
       },
+    });
+  }
+
+  updateStatus(id: string, status: OrderStatus) {
+    return this.prisma.order.update({
+      where: { id },
+      data: { status },
     });
   }
 }

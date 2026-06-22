@@ -10,6 +10,11 @@ export class CartItemRepository {
       where: { id },
       include: {
         cart: true,
+        toppings: {
+          include: {
+            topping: true,
+          },
+        },
       },
     });
   }
@@ -17,6 +22,13 @@ export class CartItemRepository {
   findItem(cartId: string, variantId: string) {
     return this.prisma.cartItem.findFirst({
       where: { cartId, variantId },
+      include: {
+        toppings: {
+          include: {
+            topping: true,
+          },
+        },
+      },
     });
   }
 
@@ -34,6 +46,11 @@ export class CartItemRepository {
     return this.prisma.cartItem.update({
       where: { id },
       data: { quantity },
+      include: {
+        toppings: {
+          include: { topping: true },
+        },
+      },
     });
   }
 

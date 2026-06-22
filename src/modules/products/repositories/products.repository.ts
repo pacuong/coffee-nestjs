@@ -12,6 +12,8 @@ export class ProductsRepository {
     slug: string;
     description?: string;
     categoryId: string;
+    image?: string;
+    imagePublicId?: string;
   }) {
     return this.prisma.product.create({
       data,
@@ -49,8 +51,16 @@ export class ProductsRepository {
 
   findById(id: string) {
     return this.prisma.product.findUnique({
-      where: {
-        id,
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        image: true,
+        imagePublicId: true,
+        isActive: true,
+        categoryId: true,
       },
     });
   }

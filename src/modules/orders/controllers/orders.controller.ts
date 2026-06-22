@@ -1,4 +1,12 @@
-import { Controller, Post, Get, Param, UseGuards, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  UseGuards,
+  Body,
+  Patch,
+} from '@nestjs/common';
 
 import { OrdersService } from '../services/orders.service';
 
@@ -10,6 +18,7 @@ import { Roles } from 'src/core/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { CreateOrderDto } from 'src/modules/orders/dto/create-order.dto';
 import { RolesGuard } from 'src/core/guards/roles.guard';
+import { UpdateOrderStatusDto } from 'src/modules/orders/dto/update-order-status.dto';
 
 @ApiTags('Orders')
 @UseGuards(JwtAuthGuard)
@@ -22,11 +31,6 @@ export class OrdersController {
     return this.ordersService.createOrder(user.sub, dto);
   }
 
-  @Get(':id')
-  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.ordersService.findOrder(user.sub, id);
-  }
-
   @Get()
   findMyOrders(@CurrentUser() user: JwtPayload) {
     return this.ordersService.findMyOrders(user.sub);
@@ -37,5 +41,16 @@ export class OrdersController {
   @Roles(Role.ADMIN)
   findAll() {
     return this.ordersService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.ordersService.findOrder(user.sub, id);
+  }
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateOrderStatusDto) {
+    return this.ordersService.updateStatus(id, dto.status);
   }
 }

@@ -1,16 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class CategoriesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(name: string, slug: string) {
+  create(data: Prisma.CategoryCreateInput) {
     return this.prisma.category.create({
-      data: {
-        name,
-        slug,
-      },
+      data,
     });
   }
 
@@ -28,13 +26,18 @@ export class CategoriesRepository {
 
   findById(id: string) {
     return this.prisma.category.findUnique({
-      where: {
-        id,
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        image: true,
+        imagePublicId: true,
       },
     });
   }
 
-  update(id: string, data: { name?: string; slug?: string }) {
+  update(id: string, data: Prisma.CategoryUpdateInput) {
     return this.prisma.category.update({
       where: { id },
       data,

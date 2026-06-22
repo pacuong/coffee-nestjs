@@ -52,6 +52,9 @@ model Category {
   name      String
   slug      String    @unique
 
+  image         String?
+  imagePublicId String?
+
   products  Product[]
 
   createdAt DateTime  @default(now())
@@ -67,6 +70,7 @@ model Product {
   description String?           @db.Text
 
   image       String?
+  imagePublicId String?
 
   isActive    Boolean           @default(true)
 
@@ -96,23 +100,14 @@ model ProductVariant {
   updatedAt   DateTime            @updatedAt
 }
 
-model Topping {
-  id          String            @id @default(cuid())
-
-  name        String
-  price       Decimal           @db.Decimal(10, 2)
-
-  orderItems  OrderItemTopping[]
-
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-}
-
 model Ingredient {
   id            String          @id @default(cuid())
 
   name          String          @unique
   unit          String
+
+  image         String?
+  imagePublicId String?
 
   inventory     Inventory?
   recipeItems   RecipeItem[]
@@ -183,8 +178,41 @@ model CartItem {
 
   quantity    Int
 
+  toppings    CartItemTopping[]
+
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
+}
+
+model Topping {
+  id          String            @id @default(cuid())
+
+  name        String
+  price       Decimal           @db.Decimal(10, 2)
+
+  image         String?
+  imagePublicId String?
+
+  cartItems   CartItemTopping[]
+  orderItems  OrderItemTopping[]
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model CartItemTopping {
+  id          String        @id @default(cuid())
+
+  cartItemId  String
+  cartItem    CartItem      @relation(fields: [cartItemId], references: [id])
+
+  toppingId   String
+  topping     Topping       @relation(fields: [toppingId], references: [id])
+
+  quantity    Int
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model Order {

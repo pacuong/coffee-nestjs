@@ -4,7 +4,12 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { Prisma, OrderStatus, PaymentStatus } from '@prisma/client';
+import {
+  Prisma,
+  OrderStatus,
+  PaymentStatus,
+  PaymentMethod,
+} from '@prisma/client';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CartRepository } from '../../carts/repositories/cart.repository';
@@ -21,10 +26,6 @@ export class OrdersService {
 
   async createOrder(userId: string, dto: CreateOrderDto) {
     const cart = await this.cartRepo.findByUserId(userId);
-
-    console.dir(cart, {
-      depth: null,
-    });
 
     if (!cart || cart.items.length === 0) {
       throw new BadRequestException('Cart is empty');
@@ -86,16 +87,35 @@ export class OrdersService {
       let total = new Prisma.Decimal(0);
 
       const orderItems = cart.items.map((item) => {
-        const price = item.variant.price;
+        const basePrice = item.variant.price;
         const quantity = item.quantity;
 
-        const itemTotal = price.mul(quantity);
+        let toppingTotal = new Prisma.Decimal(0);
+
+        const toppings = item.toppings.map((t) => {
+          const toppingPrice = t.topping.price;
+
+          const sub = toppingPrice.mul(t.quantity);
+
+          toppingTotal = toppingTotal.add(sub);
+
+          return {
+            toppingId: t.toppingId,
+            quantity: t.quantity,
+          };
+        });
+
+        const itemTotal = basePrice.mul(quantity).add(toppingTotal);
+
         total = total.add(itemTotal);
 
         return {
           variantId: item.variantId,
           quantity,
-          price,
+          price: basePrice,
+          toppings: {
+            create: toppings,
+          },
         };
       });
 
@@ -107,7 +127,10 @@ export class OrdersService {
           totalAmount: total,
           status: OrderStatus.PENDING,
           paymentMethod: dto.paymentMethod,
-          paymentStatus: PaymentStatus.PENDING,
+          paymentStatus:
+            dto.paymentMethod === PaymentMethod.COD
+              ? PaymentStatus.PAID
+              : PaymentStatus.PENDING,
 
           items: {
             create: orderItems,
@@ -122,12 +145,31 @@ export class OrdersService {
         },
       });
 
-      await tx.payment.create({
-        data: {
-          orderId: order.id,
-          amount: total,
-          status: PaymentStatus.PENDING,
+      if (dto.paymentMethod !== PaymentMethod.COD) {
+        await tx.payment.upsert({
+          where: { orderId: order.id },
+          update: {
+            amount: total,
+            status: PaymentStatus.PENDING,
+          },
+          create: {
+            orderId: order.id,
+            amount: total,
+            status: PaymentStatus.PENDING,
+          },
+        });
+      }
+
+      await tx.cartItemTopping.deleteMany({
+        where: {
+          cartItem: {
+            cartId: cart.id,
+          },
         },
+      });
+
+      await tx.cartItem.deleteMany({
+        where: { cartId: cart.id },
       });
 
       return order;
@@ -156,5 +198,15 @@ export class OrdersService {
 
   findAll() {
     return this.orderRepo.findAll();
+  }
+
+  async updateStatus(id: string, status: OrderStatus) {
+    const order = await this.orderRepo.findById(id);
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    return this.orderRepo.updateStatus(id, status);
   }
 }

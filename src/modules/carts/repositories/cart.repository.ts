@@ -29,6 +29,11 @@ export class CartRepository {
                 },
               },
             },
+            toppings: {
+              include: {
+                topping: true,
+              },
+            },
           },
         },
       },

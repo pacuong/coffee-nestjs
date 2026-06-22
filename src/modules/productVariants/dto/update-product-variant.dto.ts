@@ -1,4 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { IsOptional, IsString, IsNumber } from 'class-validator';
 
 export class UpdateProductVariantDto {
@@ -13,6 +14,7 @@ export class UpdateProductVariantDto {
     example: 59000,
   })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   price?: number;
 }

@@ -12,6 +12,11 @@ import { IngredientsModule } from 'src/modules/ingredients/ingredients.module';
 import { InventoryModule } from 'src/modules/Inventory/inventory.module';
 import { RecipesModule } from 'src/modules/recipes/recipes.module';
 
+import { MulterModule } from '@nestjs/platform-express';
+import * as multer from 'multer';
+import { CloudinaryModule } from 'src/integrations/cloudinary/cloudinary.module';
+import { PaymentsModule } from 'src/modules/payments/payments.module';
+import { StatisticsModule } from 'src/modules/statistics/statistics.module';
 @Module({
   imports: [
     AuthModule,
@@ -23,10 +28,15 @@ import { RecipesModule } from 'src/modules/recipes/recipes.module';
     IngredientsModule,
     InventoryModule,
     RecipesModule,
+    CloudinaryModule,
+    PaymentsModule,
+    StatisticsModule,
+    MulterModule.register({
+      storage: multer.memoryStorage(),
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-
     PrismaModule,
   ],
 })

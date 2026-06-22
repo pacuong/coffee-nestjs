@@ -36,5 +36,5 @@ export class QueryProductDto {
   })
   @IsOptional()
   @Type(() => Boolean)
-  isActive?: string;
+  isActive?: boolean;
 }

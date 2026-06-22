@@ -8,12 +8,16 @@ import slugify from 'slugify';
 import { CategoriesRepository } from '../repositories/categories.repository';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from 'src/modules/categories/dto/update-category.dto';
+import { CloudinaryService } from 'src/integrations/cloudinary/cloudinary.service';
 
 @Injectable()
 export class CategoriesService {
-  constructor(private readonly categoriesRepository: CategoriesRepository) {}
+  constructor(
+    private readonly categoriesRepository: CategoriesRepository,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
-  async create(dto: CreateCategoryDto) {
+  async create(dto: CreateCategoryDto, file?: Express.Multer.File) {
     const slug = slugify(dto.name, {
       lower: true,
       strict: true,
@@ -25,7 +29,22 @@ export class CategoriesService {
       throw new BadRequestException('Category already exists');
     }
 
-    return this.categoriesRepository.create(dto.name, slug);
+    let image: string | undefined;
+    let imagePublicId: string | undefined;
+
+    if (file) {
+      const upload = await this.cloudinaryService.uploadImage(file);
+
+      image = upload.url;
+      imagePublicId = upload.publicId;
+    }
+
+    return this.categoriesRepository.create({
+      name: dto.name,
+      slug,
+      image,
+      imagePublicId,
+    });
   }
 
   async findAll() {
@@ -42,11 +61,25 @@ export class CategoriesService {
     return category;
   }
 
-  async update(id: string, dto: UpdateCategoryDto) {
+  async update(id: string, dto: UpdateCategoryDto, file?: Express.Multer.File) {
     const category = await this.categoriesRepository.findById(id);
 
     if (!category) {
       throw new NotFoundException('Category not found');
+    }
+
+    let image = category.image;
+    let imagePublicId = category.imagePublicId;
+
+    if (file) {
+      if (imagePublicId) {
+        await this.cloudinaryService.deleteImage(imagePublicId);
+      }
+
+      const upload = await this.cloudinaryService.uploadImage(file);
+
+      image = upload.url;
+      imagePublicId = upload.publicId;
     }
 
     let slug: string | undefined;
@@ -67,6 +100,8 @@ export class CategoriesService {
     return this.categoriesRepository.update(id, {
       name: dto.name,
       slug,
+      image,
+      imagePublicId,
     });
   }
 
@@ -75,6 +110,10 @@ export class CategoriesService {
 
     if (!category) {
       throw new NotFoundException('Category not found');
+    }
+
+    if (category.imagePublicId) {
+      await this.cloudinaryService.deleteImage(category.imagePublicId);
     }
 
     return this.categoriesRepository.delete(id);
