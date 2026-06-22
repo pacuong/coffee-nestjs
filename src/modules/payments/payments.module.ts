@@ -12,9 +12,10 @@ import { PaymentsRepository } from './repositories/payments.repository';
 
 import { PaymentsService } from './services/payments.service';
 import { MomoService } from './services/momo.service';
+import { StatisticsModule } from 'src/modules/statistics/statistics.module';
 
 @Module({
-  imports: [PrismaModule, ConfigModule, OrdersModule],
+  imports: [PrismaModule, ConfigModule, OrdersModule, StatisticsModule],
 
   controllers: [PaymentsController],
 

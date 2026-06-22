@@ -17,6 +17,9 @@ import * as multer from 'multer';
 import { CloudinaryModule } from 'src/integrations/cloudinary/cloudinary.module';
 import { PaymentsModule } from 'src/modules/payments/payments.module';
 import { StatisticsModule } from 'src/modules/statistics/statistics.module';
+import { RedisModule } from 'src/integrations/redis/redis.module';
+import { SocketModule } from 'src/integrations/socket/socket.module';
+import { NotificationsModule } from 'src/modules/notifications/notifications.module';
 @Module({
   imports: [
     AuthModule,
@@ -31,6 +34,9 @@ import { StatisticsModule } from 'src/modules/statistics/statistics.module';
     CloudinaryModule,
     PaymentsModule,
     StatisticsModule,
+    RedisModule,
+    SocketModule,
+    NotificationsModule,
     MulterModule.register({
       storage: multer.memoryStorage(),
     }),

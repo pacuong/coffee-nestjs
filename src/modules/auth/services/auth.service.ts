@@ -11,12 +11,15 @@ import { UsersRepository } from '../../users/repositories/users.repository';
 
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
+import { ConfigService } from '@nestjs/config';
+import { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -79,6 +82,30 @@ export class AuthService {
     return {
       accessToken,
       user: safeUser,
+    };
+  }
+
+  async refreshToken(refreshToken: string) {
+    const payload = await this.jwtService.verifyAsync<JwtPayload>(
+      refreshToken,
+      {
+        secret: this.configService.get('JWT_REFRESH_SECRET'),
+      },
+    );
+
+    const accessToken = await this.jwtService.signAsync(
+      {
+        sub: payload.sub,
+        role: payload.role,
+      },
+      {
+        secret: this.configService.get('JWT_SECRET'),
+        expiresIn: '15m',
+      },
+    );
+
+    return {
+      accessToken,
     };
   }
 }

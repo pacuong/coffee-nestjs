@@ -15,6 +15,11 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CartRepository } from '../../carts/repositories/cart.repository';
 import { OrdersRepository } from '../repositories/orders.repository';
 import { CreateOrderDto } from 'src/modules/orders/dto/create-order.dto';
+import { getCartCacheKey } from 'src/common/helpers/cart-cache.helper';
+import { RedisService } from 'src/integrations/redis/redis.service';
+import { SocketService } from 'src/integrations/socket/socket.service';
+import { NotificationsService } from 'src/modules/notifications/services/notifications.service';
+import { StatisticsService } from 'src/modules/statistics/services/statistics.service';
 
 @Injectable()
 export class OrdersService {
@@ -22,6 +27,10 @@ export class OrdersService {
     private readonly prisma: PrismaService,
     private readonly cartRepo: CartRepository,
     private readonly orderRepo: OrdersRepository,
+    private readonly redis: RedisService,
+    private readonly socketService: SocketService,
+    private readonly notificationsService: NotificationsService,
+    private readonly statisticsService: StatisticsService,
   ) {}
 
   async createOrder(userId: string, dto: CreateOrderDto) {
@@ -63,18 +72,27 @@ export class OrdersService {
       }
 
       for (const cartItem of cart.items) {
-        const recipe = cartItem.variant.recipe!;
+        const recipe = cartItem.variant.recipe;
+
+        if (!recipe) {
+          throw new BadRequestException(
+            `${cartItem.variant.name} has no recipe`,
+          );
+        }
 
         for (const recipeItem of recipe.items) {
-          const inventory = recipeItem.ingredient.inventory!;
+          const inventory = recipeItem.ingredient.inventory;
+
+          if (!inventory) {
+            throw new BadRequestException(
+              `${recipeItem.ingredient.name} inventory not found`,
+            );
+          }
 
           const required = Number(recipeItem.quantity) * cartItem.quantity;
 
           await tx.inventory.update({
-            where: {
-              id: inventory.id,
-            },
-
+            where: { id: inventory.id },
             data: {
               quantity: {
                 decrement: required,
@@ -87,7 +105,7 @@ export class OrdersService {
       let total = new Prisma.Decimal(0);
 
       const orderItems = cart.items.map((item) => {
-        const basePrice = item.variant.price;
+        const basePrice = new Prisma.Decimal(item.variant.price);
         const quantity = item.quantity;
 
         let toppingTotal = new Prisma.Decimal(0);
@@ -175,6 +193,7 @@ export class OrdersService {
       return order;
     });
 
+    await this.redis.del(getCartCacheKey(userId));
     return result;
   }
 
@@ -207,6 +226,27 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    return this.orderRepo.updateStatus(id, status);
+    const updated = await this.orderRepo.updateStatus(id, status);
+
+    this.socketService.emitOrderStatusUpdated(
+      order.userId,
+      order.id,
+      updated.status,
+    );
+
+    await this.notificationsService.create(
+      order.userId,
+      'Cập nhật đơn hàng',
+      `Đơn hàng ${order.id} đã chuyển sang trạng thái ${status}`,
+    );
+
+    await Promise.all([
+      this.redis.del('stats:overview'),
+      this.redis.del('stats:revenue-by-day'),
+    ]);
+
+    await this.statisticsService.emitDashboardUpdate();
+
+    return updated;
   }
 }

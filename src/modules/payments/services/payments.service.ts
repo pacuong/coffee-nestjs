@@ -10,6 +10,8 @@ import { PaymentsRepository } from '../repositories/payments.repository';
 
 import { MomoService } from './momo.service';
 import { MomoIpnDto } from 'src/modules/payments/dto/momo-ipn.dto';
+import { RedisService } from 'src/integrations/redis/redis.service';
+import { StatisticsService } from 'src/modules/statistics/services/statistics.service';
 
 @Injectable()
 export class PaymentsService {
@@ -21,6 +23,8 @@ export class PaymentsService {
     private readonly paymentRepo: PaymentsRepository,
 
     private readonly orderRepo: OrdersRepository,
+    private readonly redis: RedisService,
+    private readonly statisticsService: StatisticsService,
   ) {}
 
   async createMomoPayment(orderId: string) {
@@ -61,6 +65,12 @@ export class PaymentsService {
       throw new NotFoundException('Order not found');
     }
 
+    if (order.paymentStatus === PaymentStatus.PAID) {
+      return {
+        message: 'Already processed',
+      };
+    }
+
     const paymentStatus =
       data.resultCode === 0 ? PaymentStatus.PAID : PaymentStatus.FAILED;
 
@@ -78,6 +88,14 @@ export class PaymentsService {
         paymentStatus,
       },
     });
+
+    if (paymentStatus === PaymentStatus.PAID) {
+      await Promise.all([
+        this.redis.del('stats:overview'),
+        this.redis.del('stats:revenue-by-day'),
+      ]);
+      await this.statisticsService.emitDashboardUpdate();
+    }
 
     return {
       message: 'OK',
