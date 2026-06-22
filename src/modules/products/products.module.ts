@@ -9,9 +9,10 @@ import { ProductsController } from './controllers/products.controller';
 import { ProductsService } from './services/products.service';
 
 import { ProductsRepository } from './repositories/products.repository';
+import { CloudinaryModule } from 'src/integrations/cloudinary/cloudinary.module';
 
 @Module({
-  imports: [PrismaModule, CategoriesModule],
+  imports: [PrismaModule, CategoriesModule, CloudinaryModule],
 
   controllers: [ProductsController],
 

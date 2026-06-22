@@ -7,9 +7,10 @@ import { CategoriesService } from './services/categories.service';
 import { CategoriesRepository } from './repositories/categories.repository';
 
 import { PrismaModule } from '../../prisma/prisma.module';
+import { CloudinaryModule } from 'src/integrations/cloudinary/cloudinary.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, CloudinaryModule],
 
   controllers: [CategoriesController],
 

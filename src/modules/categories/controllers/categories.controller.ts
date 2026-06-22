@@ -6,7 +6,9 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 
 import { CategoriesService } from '../services/categories.service';
@@ -18,6 +20,7 @@ import { Roles } from 'src/core/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdateCategoryDto } from 'src/modules/categories/dto/update-category.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -27,8 +30,12 @@ export class CategoriesController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  create(@Body() dto: CreateCategoryDto) {
-    return this.categoriesService.create(dto);
+  @UseInterceptors(FileInterceptor('image'))
+  create(
+    @Body() dto: CreateCategoryDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.categoriesService.create(dto, file);
   }
 
   @Get()
@@ -44,8 +51,13 @@ export class CategoriesController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
-    return this.categoriesService.update(id, dto);
+  @UseInterceptors(FileInterceptor('image'))
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateCategoryDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.categoriesService.update(id, dto, file);
   }
 
   @Delete(':id')

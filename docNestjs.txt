@@ -83,7 +83,10 @@ coffee-backend/
 │   │   │   ├── payment-status.enum.ts
 │   │   │   ├── role.enum.ts
 │   │   ├── interfaces/
+│   │   │   ├── cloudinary-result.interface.ts
 │   │   │   ├── jwt-payload.interface.ts
+│   │   │   ├── momo-create-payment-response.interface.ts
+│   │   │   ├── upload-result.interface.ts
 │   │   ├── dto/
 │   │   └── helpers/
 │   ├── prisma/
@@ -101,7 +104,6 @@ coffee-backend/
 │   │   │   └── momo.service.ts
 │   │   └── socket/
 │   ├── shared/
-│   │   ├── upload/
 │   │   ├── cache/
 │   │   └── logger/
 │   └── modules/
@@ -203,6 +205,16 @@ coffee-backend/
 │       │   └── dto/
 │       │   │   └── create-order-item.dto.ts
 │       ├── payments/
+│       │   ├── payments.module.ts
+│       │   ├── controllers/
+│       │   │   └── payments.controller.ts
+│       │   ├── services/
+│       │   │   └── payments.service.ts
+│       │   │   └── momo.service.ts
+│       │   ├── repositories/
+│       │   │   └── payments.repository.ts
+│       │   └── dto/
+│       │   │   └── momo-ipn.dto.ts
 │       └── notifications/
 │
 ├── test/

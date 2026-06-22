@@ -7,7 +7,9 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 
 import { ProductsService } from '../services/products.service';
@@ -20,6 +22,7 @@ import { Role } from '@prisma/client';
 import { Roles } from 'src/core/decorators/roles.decorator';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdateProductDto } from 'src/modules/products/dto/update-product.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Products')
 @Controller('products')
@@ -29,8 +32,12 @@ export class ProductsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  create(@Body() dto: CreateProductDto) {
-    return this.productsService.create(dto);
+  @UseInterceptors(FileInterceptor('image'))
+  create(
+    @Body() dto: CreateProductDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.productsService.create(dto, file);
   }
 
   @Get(':id')
@@ -46,8 +53,13 @@ export class ProductsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
-    return this.productsService.update(id, dto);
+  @UseInterceptors(FileInterceptor('image'))
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateProductDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.productsService.update(id, dto, file);
   }
 
   @Delete(':id')
